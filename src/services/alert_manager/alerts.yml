@@ -1,0 +1,30 @@
+groups:
+  - name: alert_rules
+    rules:
+      - alert: Low Available Memory
+        expr: node_filesystem_avail_bytes{device=~"/dev/sda.*"} / 1000 / 1000  < 100
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low available memory on {{ $labels.instance }}"
+          description: "Available memory is less than 100 MB."
+
+      - alert: High RAM Usage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) > 1 * 1000 * 1000 * 1000
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High RAM usage on {{ $labels.instance }}"
+          description: "Spent RAM is more than 1 GB."
+
+      - alert: High CPU Usage
+        expr: (irate(container_cpu_usage_seconds_total{container_label_com_docker_swarm_service_name!=''}[1m])) * 100 > 10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage for the service exceeds 10%."
+

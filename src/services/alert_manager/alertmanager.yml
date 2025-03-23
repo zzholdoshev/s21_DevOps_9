@@ -1,0 +1,25 @@
+global:
+  resolve_timeout: 2m
+
+route:
+  group_by: ['alerts']
+  group_wait: 30s
+  group_interval: 1m
+  repeat_interval: 1m
+  receiver: 'telegram_and_email'
+
+receivers:
+  - name: 'telegram_and_email'
+    email_configs:
+      - to: 'johnapplesead@yandex.ru'
+        from: 'zzholdoshev@gmail.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'zzholdoshev@gmail.com'
+        auth_password: 'xdif znwc qbpv qibr' 
+    telegram_configs:
+      - api_url: 'https://api.telegram.org'
+        bot_token: '7296512492:AAGlBv6JpvEjBZnEL6JZnsC9ZNvgbb5Zzl8'
+        chat_id: -4770499020  # Replace with your Telegram chat ID
+        send_resolved: true
+        parse_mode: ''
+        message: "🚨 Alertmanager 🚨\n--\n🔺 Alertname: {{ .GroupLabels.alertname}}\n🔺 Severity: {{ .CommonLabels.severity }}\n📌 {{ range .Alerts }}{{ .Annotations.summary }}\n{{ end }}"

@@ -1,0 +1,148 @@
+services:
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users_db
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    networks:
+      - monitoring
+
+  session:
+    image: maelysje/session_service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: users_db
+    networks:
+      - monitoring
+    ports:
+      - 8081:8081
+    deploy:
+      placement:
+        constraints: [node.role == manager] 
+
+  hotel:
+    image: maelysje/hotel_service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hotels_db
+    networks:
+      - monitoring
+
+  payment:
+    image: maelysje/payment_service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payments_db
+    networks:
+      - monitoring
+
+  loyalty:
+    image: maelysje/loyalty_service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: balances_db
+      RABBIT_MQ_HOST: rabbitmq
+      RABBIT_MQ_PORT: 5672
+      RABBIT_MQ_USER: guest
+      RABBIT_MQ_PASSWORD: guest
+      RABBIT_MQ_QUEUE_NAME: messagequeue
+      RABBIT_MQ_EXCHANGE: messagequeue-exchange
+    networks:
+      - monitoring
+
+  report:
+    image: maelysje/report_service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: statistics_db
+      RABBIT_MQ_HOST: rabbitmq
+      RABBIT_MQ_PORT: 5672
+      RABBIT_MQ_USER: guest
+      RABBIT_MQ_PASSWORD: guest
+      RABBIT_MQ_QUEUE_NAME: messagequeue
+      RABBIT_MQ_EXCHANGE: messagequeue-exchange
+    networks:
+      - monitoring
+
+  booking:
+    image: maelysje/booking_service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: reservations_db
+      RABBIT_MQ_HOST: rabbitmq
+      RABBIT_MQ_PORT: 5672
+      RABBIT_MQ_USER: guest
+      RABBIT_MQ_PASSWORD: guest
+      RABBIT_MQ_QUEUE_NAME: messagequeue
+      RABBIT_MQ_EXCHANGE: messagequeue-exchange
+      HOTEL_SERVICE_HOST: hotel
+      HOTEL_SERVICE_PORT: 8082
+      PAYMENT_SERVICE_HOST: payment
+      PAYMENT_SERVICE_PORT: 8084
+      LOYALTY_SERVICE_HOST: loyalty
+      LOYALTY_SERVICE_PORT: 8085
+    networks:
+      - monitoring
+
+  gateway:
+    image: maelysje/gateway_service
+    networks:
+      - monitoring
+    environment:
+      SESSION_SERVICE_HOST: session
+      SESSION_SERVICE_PORT: 8081
+      HOTEL_SERVICE_HOST: hotel
+      HOTEL_SERVICE_PORT: 8082
+      BOOKING_SERVICE_HOST: booking
+      BOOKING_SERVICE_PORT: 8083
+      PAYMENT_SERVICE_HOST: payment
+      PAYMENT_SERVICE_PORT: 8084
+      LOYALTY_SERVICE_HOST: loyalty
+      LOYALTY_SERVICE_PORT: 8085
+      REPORT_SERVICE_HOST: report
+      REPORT_SERVICE_PORT: 8086
+    ports:
+      - 8087:8087
+    deploy:
+      placement:
+        constraints: [node.role == manager] 
+
+  
+networks:
+  monitoring:
+    name: monitoring
+    external: true
+
