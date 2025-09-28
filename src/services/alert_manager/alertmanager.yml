@@ -15,10 +15,10 @@ receivers:
         from: 'zzholdoshev@gmail.com'
         smarthost: 'smtp.gmail.com:587'
         auth_username: 'zzholdoshev@gmail.com'
-        auth_password: 'xdif znwc qbpv qibr' 
+        auth_password: 'PASSWD' 
     telegram_configs:
       - api_url: 'https://api.telegram.org'
-        bot_token: '7296512492:AAGlBv6JpvEjBZnEL6JZnsC9ZNvgbb5Zzl8'
+        bot_token: 'TOKEN'
         chat_id: -4770499020  # Replace with your Telegram chat ID
         send_resolved: true
         parse_mode: ''
